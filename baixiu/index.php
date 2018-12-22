@@ -1,3 +1,32 @@
+<?php
+include_once "./common/mysql.php";
+$conn  = connect();
+$sql = "SELECT p.title,p.feature,p.created,p.content,p.views,p.likes,u.nickname,c.name,
+(select count(*) from comments where comments.post_id = p.id) as commentsCount
+from posts as p
+join users as u on p.user_id = u.id
+join categories as c on p.category_id = c.id
+ORDER BY p.created DESC
+limit 3";
+$postArr = query($conn,$sql);
+
+
+
+// $conn = mysqli_connect("localhost","root","root","baixiu");
+// $post_sql = "SELECT p.title,p.feature,p.created,p.content,p.views,p.likes,u.nickname,c.name,
+// (select count(*) from comments where comments.post_id = p.id) as commentsCount
+// from posts as p
+// join users as u on p.user_id = u.id
+// join categories as c on p.category_id = c.id
+// ORDER BY p.created DESC
+// limit 3";
+// $result = mysqli_query($conn,$post_sql);
+// while($row = mysqli_fetch_assoc($result)){
+//     $postArr[] = $row;
+// }
+// print_r($postArr);
+
+?>
 <!DOCTYPE html>
 <html lang="zh-CN">
 
@@ -155,8 +184,37 @@
             </div>
             <div class="panel new">
                 <h3>最新发布</h3>
-                <div class="entry">
-                    <div class="head">
+                <?php foreach($postArr as $value) : ?>
+  <div class="entry"> 
+                  <div class="head"> 
+                        <span class="sort"><?php echo $value["name"] ?></span>
+                        <a href="javascript:;"><?php echo $value["title"] ?></a>
+                    </div>
+                    <div class="main">
+                        <p class="info"><?php echo $value["nickname"] ?> 发表于 <?php echo $value["created"] ?></p>
+                        <p class="brief"><?php echo $value["content"] ?></p>
+                        <p class="extra">
+                            <span class="reading">阅读(<?php echo $value["views"] ?>)</span>
+                            <span class="comment">评论(<?php echo $value["commentsCount"] ?>)</span>
+                            <a href="javascript:;" class="like">
+                                <i class="fa fa-thumbs-up"></i>
+                                <span>赞(<?php echo $value["likes"] ?>)</span>
+                            </a>
+                            <a href="javascript:;" class="tags"> 
+                分类：<span><?php echo $value["name"] ?></span>
+              </a>
+                        </p>
+                        <a href="javascript:;" class="thumb">
+                            <img src="<?php echo $value["feature"] ?>" alt="">
+                        </a>
+                    </div>
+                </div>
+
+
+
+                <?php endforeach ?>
+                <!-- <div class="entry">  -->
+                    <!-- <div class="head">
                         <span class="sort">会生活</span>
                         <a href="javascript:;">星球大战：原力觉醒视频演示 电影票68</a>
                     </div>
@@ -170,8 +228,8 @@
                                 <i class="fa fa-thumbs-up"></i>
                                 <span>赞(167)</span>
                             </a>
-                            <a href="javascript:;" class="tags">
-                分类：<span>星球大战</span>
+                            <a href="javascript:;" class="tags"> -->
+                <!-- 分类：<span>星球大战</span>
               </a>
                         </p>
                         <a href="javascript:;" class="thumb">
@@ -226,7 +284,7 @@
                             <img src="static/uploads/hots_2.jpg" alt="">
                         </a>
                     </div>
-                </div>
+                </div> -->
             </div>
         </div>
         <div class="footer">

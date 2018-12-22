@@ -1,3 +1,12 @@
+
+<?php
+require_once "../common/isset_session.php";
+?>
+
+
+
+
+
 <!DOCTYPE html>
 <html lang="zh-CN">
 

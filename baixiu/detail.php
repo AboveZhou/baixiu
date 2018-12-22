@@ -1,3 +1,23 @@
+<?php
+include_once "./common/mysql.php";
+$listId = $_GET["listId"];
+$connect  = connect();
+$sql =  "SELECT p.title,p.feature,p.created,p.content,p.views,p.likes,u.nickname,c.name,
+(select count(*) from comments where comments.post_id = p.id) as commentsCount
+from posts as p
+join users as u on p.user_id = u.id
+join categories as c on p.category_id = c.id
+where p.id =$listId
+";
+$detailArr = query($connect,$sql);
+// print_r($detailArr);
+?>
+
+
+
+
+
+
 <!DOCTYPE html>
 <html lang="zh-CN">
 
@@ -23,7 +43,38 @@
       include_once "./common/aside.php";
       ?>
         <div class="content">
-            <div class="article">
+     <!-- foreach 动态生成 -->
+<?php  
+foreach($detailArr as $value) : ?>
+    <div class="article">
+    <div class="breadcrumb">
+        <dl>
+            <dt>当前位置：</dt>
+            <dd><a href="javascript:;"><?php echo $value['name'] ?></a></dd>
+            <dd>变废为宝！将手机旧电池变为充电宝的Better RE移动电源</dd>
+        </dl>
+    </div>
+    <h2 class="title">
+        <a href="javascript:;"><?php echo $value['title'] ?></a>
+    </h2>
+    <div class="meta">
+        <span><?php echo $value['nickname'] ?> 发布于 <?php echo $value['created'] ?></span>
+        <p class="brief"><?php echo $value["content"] ?></p>
+        <span>分类: <a href="javascript:;"><?php echo $value['name'] ?></a></span>
+        <span>阅读: (<?php echo $value['views'] ?>)</span>
+        <span>评论: (<?php echo $value['commentsCount'] ?>)</span>
+    </div>
+</div>
+
+
+  <?php  endforeach   ?>
+
+
+            
+
+
+
+            <!-- <div class="article">
                 <div class="breadcrumb">
                     <dl>
                         <dt>当前位置：</dt>
@@ -40,7 +91,11 @@
                     <span>阅读: (2421)</span>
                     <span>评论: (143)</span>
                 </div>
-            </div>
+            </div> -->
+
+
+
+
             <div class="panel hots">
                 <h3>热门推荐</h3>
                 <ul>
@@ -76,5 +131,6 @@
         </div>
     </div>
 </body>
+
 
 </html>
