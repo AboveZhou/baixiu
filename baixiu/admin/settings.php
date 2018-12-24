@@ -24,13 +24,16 @@ require_once "../common/isset_session.php";
     </script>
 
     <div class="main">
-        <nav class="navbar">
+    <?php
+include_once "../common/admin-nav.php";
+    ?>
+        <!-- <nav class="navbar">
             <button class="btn btn-default navbar-btn fa fa-bars"></button>
             <ul class="nav navbar-nav navbar-right">
                 <li><a href="profile.php"><i class="fa fa-user"></i>个人中心</a></li>
                 <li><a href="login.php"><i class="fa fa-sign-out"></i>退出</a></li>
             </ul>
-        </nav>
+        </nav> -->
         <div class="container-fluid">
             <div class="page-title">
                 <h1>网站设置</h1>
@@ -89,7 +92,10 @@ require_once "../common/isset_session.php";
         </div>
     </div>
 
-    <div class="aside">
+    <?php
+include_once "../common/admin-aside.php";
+    ?>
+    <!-- <div class="aside">
         <div class="profile">
             <img class="avatar" src="../static/uploads/avatar.jpg">
             <h3 class="name">布头儿</h3>
@@ -125,7 +131,7 @@ require_once "../common/isset_session.php";
                 </ul>
             </li>
         </ul>
-    </div>
+    </div> -->
 
     <script src="../static/assets/vendors/jquery/jquery.js"></script>
     <script src="../static/assets/vendors/bootstrap/js/bootstrap.js"></script>
