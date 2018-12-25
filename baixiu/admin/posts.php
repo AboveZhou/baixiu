@@ -59,11 +59,7 @@ include_once "../common/admin-nav.php";
                     <button class="btn btn-default btn-sm">筛选</button>
                 </form>
                 <ul class="pagination pagination-sm pull-right">
-                    <li><a href="#">上一页</a></li>
-                    <li><a href="#">1</a></li>
-                    <li><a href="#">2</a></li>
-                    <li><a href="#">3</a></li>
-                    <li><a href="#">下一页</a></li>
+                  
                 </ul>
             </div>
             <table class="table table-striped table-bordered table-hover">
@@ -79,7 +75,19 @@ include_once "../common/admin-nav.php";
                     </tr>
                 </thead>
                 <tbody>
-                    <tr>
+                    <!-- <tr>
+                        <td class="text-center"><input type="checkbox"></td>
+                        <td>随便一个名称</td>
+                        <td>小小</td>
+                        <td>潮科技</td>
+                        <td class="text-center">2016/10/07</td>
+                        <td class="text-center">已发布</td>
+                        <td class="text-center">
+                            <a href="javascript:;" class="btn btn-default btn-xs">编辑</a>
+                            <a href="javascript:;" class="btn btn-danger btn-xs">删除</a>
+                        </td>
+                    </tr> -->
+                    <!-- <tr>
                         <td class="text-center"><input type="checkbox"></td>
                         <td>随便一个名称</td>
                         <td>小小</td>
@@ -102,19 +110,7 @@ include_once "../common/admin-nav.php";
                             <a href="javascript:;" class="btn btn-default btn-xs">编辑</a>
                             <a href="javascript:;" class="btn btn-danger btn-xs">删除</a>
                         </td>
-                    </tr>
-                    <tr>
-                        <td class="text-center"><input type="checkbox"></td>
-                        <td>随便一个名称</td>
-                        <td>小小</td>
-                        <td>潮科技</td>
-                        <td class="text-center">2016/10/07</td>
-                        <td class="text-center">已发布</td>
-                        <td class="text-center">
-                            <a href="javascript:;" class="btn btn-default btn-xs">编辑</a>
-                            <a href="javascript:;" class="btn btn-danger btn-xs">删除</a>
-                        </td>
-                    </tr>
+                    </tr> -->
                 </tbody>
             </table>
         </div>
@@ -162,9 +158,88 @@ include_once "../common/admin-aside.php";
 
     <script src="../static/assets/vendors/jquery/jquery.js"></script>
     <script src="../static/assets/vendors/bootstrap/js/bootstrap.js"></script>
+    <script src="../static/assets/vendors/art-template/template-web.js"></script>
+
+
     <script>
         NProgress.done()
     </script>
 </body>
+<script type="text/template" id="postTml">
+{{each data}}
+                    <tr>
+                        <td class="text-center"><input type="checkbox"></td>
+                        <td>{{$value.title}}</td>
+                        <td>{{$value.nickname}}</td>
+                        <td>{{$value.name}}</td>
+                        <td class="text-center">{{$value.created}}</td>
+                        <td class="text-center">
+                        {{ if ($value.status=="drafted") }}
+                                草稿
+                           {{else if ($value.status=="published") }} 
+                                已发布
+                            {{else if($value.status=="trashed") }}
+                                已作废
+                        {{/if}} 
+                            
+                        </td>
+                        <td class="text-center">
+                            <a href="javascript:;" class="btn btn-default btn-xs">编辑</a>
+                            <a href="javascript:;" class="btn btn-danger btn-xs">删除</a>
+                        </td>
+                    </tr>
 
+{{/each}}
+</script>
+
+
+<script type="text/template" id="paginationTpl">
+
+    <li {{if ((currentPage-1) <1)}} style="display:none" {{/if}} pageId="{{currentPage-1}}"><a href="#">上一页</a></li>
+    <li {{if ((currentPage-2) <1)}} style="display:none" {{/if}} pageId="{{currentPage-2}}"><a href="#">{{currentPage-2}}</a></li>
+    <li {{if ((currentPage-1) <1)}} style="display:none" {{/if}} pageId="{{currentPage-1}}"><a href="#">{{currentPage-1}}</a></li>
+    <li class="active"> <a href="#">{{currentPage}}</a></li>
+    <li {{if ((currentPage+1)>maxPage)}} style="display:none" {{/if}} pageId="{{currentPage+1}}"> <a href="#">{{currentPage+1}}</a></li>
+    <li {{if ((currentPage+2)>maxPage)}} style="display:none" {{/if}} pageId="{{currentPage+2}}"> <a href="#">{{currentPage+2}}</a></li>
+    <li {{if ((currentPage+1)>maxPage)}} style="display:none" {{/if}} pageId="{{currentPage+1}}"> <a href="#">下一页</a></li>
+
+
+</script>
+
+
+<script>
+var currentPage = 1;
+var pageSize = 20;
+var maxPage = 0;
+function getData(currentPage,pageSize) {
+    $.ajax({
+    type: "post",
+    url: "../api/getPostData.php",
+    data: {"currentPage":currentPage,"pageSize":pageSize},
+    dataType: "json",
+    success: function (res) {
+        // console.log(res);
+        if (res.code==1) {
+            var html = template("postTml",res);
+            $('tbody').html(html);
+             maxPage = Math.ceil(res.count/pageSize);
+            var paginationHtml = template("paginationTpl",{"currentPage":currentPage,"maxPage":maxPage});
+            $('.pagination').html(paginationHtml)
+        }
+    }
+})
+}
+
+getData(currentPage,pageSize) ;
+//给分页上的分页按钮注册点击事件
+
+$('.pagination').on("click","li",function(){
+
+//获取当前点击的自定义属性id  这个id与将要显示的页数相等
+   currentPage = parseInt($(this).attr('pageId'));
+//   alert(currentPage);
+getData(currentPage,pageSize) ;
+})
+
+</script>
 </html>

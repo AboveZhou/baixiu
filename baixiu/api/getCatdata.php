@@ -18,6 +18,7 @@ $result = mysqli_query($conn,$insertSql);
 if($result) {
 $res['code']=1;
 $res['msg']="数据添加成功";
+$res['id']= mysqli_insert_id($conn);
 }
 }
 echo json_encode($res);

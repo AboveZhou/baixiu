@@ -66,18 +66,20 @@ include_once "../common/admin-nav.php";
                         <div class="form-group">
                         
                             <input type="button" value="添加" class="btn btn-primary" id="btn">
+                            <input type="button" value="编辑" class="btn btn-primary" id="edit-btn" style="display:none">
+                            <input type="button" value="取消编辑" class="btn btn-primary" id="cancel-btn" style="display:none">
                         </div>
                     </form>
                 </div>
                 <div class="col-md-8">
                     <div class="page-action">
                         <!-- show when multiple checked -->
-                        <a class="btn btn-danger btn-sm" href="javascript:;" style="display: none">批量删除</a>
+                        <a class="btn btn-danger btn-sm" href="javascript:;" style="display: none" id="delBtn">批量删除</a>
                     </div>
                     <table class="table table-striped table-bordered table-hover">
                         <thead>
                             <tr>
-                                <th class="text-center" width="40"><input type="checkbox"></th>
+                                <th class="text-center" width="40"><input type="checkbox" id="allCheck"></th>
                                 <th>名称</th>
                                 <th>Slug</th>
                                 <th>类名</th>
@@ -174,14 +176,14 @@ include_once "../common/admin-aside.php";
 {{each data}}
 
      
-                            <tr>
+                            <tr  edit-id="{{$value.id}}">
                                 <td class="text-center"><input type="checkbox"></td>
                                 <td>{{$value.name}}</td>
                                 <td>{{$value.slug}}</td>
                                 <td>{{$value.classname}}</td>
                                 <td class="text-center">
-                                    <a href="javascript:;" class="btn btn-info btn-xs">编辑</a>
-                                    <a href="javascript:;" class="btn btn-danger btn-xs">删除</a>
+                                    <a href="javascript:;" class="btn btn-info btn-xs" id="edit">编辑</a>
+                                    <a href="javascript:;" class="btn btn-danger btn-xs" id="del">删除</a>
                                 </td>
                             </tr>
                        
@@ -189,14 +191,14 @@ include_once "../common/admin-aside.php";
 </script>
 <script type="text/template" id="insert">
 
-                            <tr>
+                            <tr edit-id="{{id}}">
                                 <td class="text-center"><input type="checkbox"></td>
                                 <td>{{name}}</td>
                                 <td>{{slug}}</td>
                                 <td>{{classname}}</td>
                                 <td class="text-center">
-                                    <a href="javascript:;" class="btn btn-info btn-xs">编辑</a>
-                                    <a href="javascript:;" class="btn btn-danger btn-xs">删除</a>
+                                    <a href="javascript:;" class="btn btn-info btn-xs" id="edit">编辑</a>
+                                    <a href="javascript:;" class="btn btn-danger btn-xs" id="del">删除</a>
                                 </td>
                             </tr>
                        
@@ -208,14 +210,17 @@ $.ajax({
     data: "data",
     dataType: "json",
     success: function (res) {
-        console.log(res);
+        // console.log(res);
         if(res.code==1) {
             var html = template("cat",res);
             $("tbody").append(html) ;
         }
     }
-});
+})
 
+
+
+//给添加按钮注册点击事件
 $('#btn').click(function(){
     var name = $('#name').val();
     var slug = $('#slug').val();
@@ -237,9 +242,10 @@ if(name.trim()==''||slug.trim()==''||classname.trim()=='') {
 }
       },
       success: function (res) {
-        //   console.log(res);
+        //   console.log(res.id);
         if(res.code==1) {
 var html = template("insert",{
+         "id":res.id,
           "name":name,
           "slug":slug,
           "classname":classname
@@ -252,11 +258,171 @@ var html = template("insert",{
         } else if (res.code==0) {
             $('.alert').show();
     $('#error').text(res.msg);
-        }
-          
+        }     
       }
-  });
+  })
 })
+
+
+//给动态生成的编辑按钮添加点击事件
+//记录列表中的当前行
+var currentRow = null;
+$('tbody').on('click','#edit',function(){
+    //获取当前行  即当前tr
+    currentRow = $(this).parent().parent();
+    //获取当前行的id
+    var editId = currentRow.attr('edit-id');
+    // alert(editId);
+    //将当前行的id传给分类目录中的编辑id   即给分类目录中编辑添加自定义属性
+    $('#edit-btn').attr('edit-id',editId);
+    //获取编辑内容这一行的值  赋值给分类目录
+    var name= currentRow.children().eq(1).text();
+    // alert(name);
+    var slug= currentRow.children().eq(2).text();
+    var classname= currentRow.children().eq(3).text();
+    $('#name').val(name);
+    $('#classname').val(slug);
+    $('#slug').val(classname);
+    //隐藏增加按钮  显示编辑和取消编辑按钮
+    $('#btn').hide();
+    $('#edit-btn').show();
+    $('#cancel-btn').show();
+})
+
+
+// 给分类编辑添加点击事件
+$('#edit-btn').click(function(){
+    //获取id   
+    var id = $('#edit-btn').attr('edit-id');
+    // alert(id);
+    var name = $('#name').val();
+    var slug = $('#slug').val();
+    var classname = $('#classname').val();
+    $.ajax({
+        type: "post",
+        url: "../api/getEditData.php",
+        data: {
+        "id":id ,
+        "name":name,
+        "slug":slug,
+        "classname":classname
+        },
+      dataType: "json",
+      beforeSend: function() {
+if(name.trim()==''||slug.trim()==''||classname.trim()=='') {
+    $('.alert').show();
+    $('#error').text("数据不完整,请填写完整");
+    return false;
+}
+      },
+        dataType: "json",
+        success: function (res) {
+            // console.log(res);
+            if(res.code==1) {
+                currentRow.children().eq(1).text(name);
+                currentRow.children().eq(2).text(slug);
+                currentRow.children().eq(3).text(classname);
+                $('#btn').show();
+                $('#edit-btn').hide();
+                $('#cancel-btn').hide();
+                $('#name').val('');
+                $('#classname').val('');
+                $('#slug').val('');
+            } else {
+                $('.alert').show();
+                $('#error').text(res.msg);
+            }
+        }
+    })
+})
+
+
+//给取消编辑按钮注册点击事件
+$('#cancel-btn').click(function(){
+    $('#btn').show();
+                $('#edit-btn').hide();
+                $('#cancel-btn').hide();
+                $('#name').val('');
+                $('#classname').val('');
+                $('#slug').val('');
+})
+
+
+
+//给动态生成的删除按钮添加点击事件
+$('tbody').on('click','#del',function(){
+    currentRow = $(this).parent().parent();
+    var delId = currentRow.attr('edit-id');
+    $.ajax({
+        type: "post",
+        url: "../api/delCatData.php",
+        data: {"id":delId},
+        dataType: "json",
+        success: function (res) {
+            if(res.code==1) {
+                currentRow.remove();
+            } else {
+                $('.alert').show();
+                $('#error').text(res.msg);
+            }
+        }
+    });
+})
+
+
+
+//全选
+$('#allCheck').click(function(){
+    var allChecked = $('#allCheck').prop('checked');
+    $('tbody :checkbox').prop('checked',allChecked);
+})
+//是否全选
+$('tbody').on('click',':checkbox',function(){
+    var length1 = $('tbody :checkbox:checked').length;
+    var length2 = $('tbody :checkbox').length;
+    if (length1==length2) {
+        $('#allCheck').prop('checked',true);
+    } else {
+        $('#allCheck').prop('checked',false);
+    }
+    if (length1>=2) {
+        $('#delBtn').show();
+    } else {
+        $('#delBtn').hide();
+    }
+})
+
+
+
+//给批量删除按钮添加点击事件
+$('#delBtn').click(function(){
+    var that = $(this);
+     //定义一个空数组  去接收循环所得的id
+     var arr =[];
+    //获取选中状态的id  需要循环得到
+    $('tbody :checkbox:checked').each(function(index,value){
+        var id = $(value).parent().parent().attr('edit-id');
+        arr.push(id);
+    })
+    var ids = arr.join(',');
+$.ajax({
+    type: "post",
+    url: "../api/delAllCatData.php",
+    data: {"ids":ids},
+    dataType: "json",
+    success: function (res) {
+        // console.log(res);
+        if (res.code==1) {
+            $('tbody :checkbox:checked').parent().parent().remove();
+            that.hide();
+        }else {
+            $('.alert').show();
+                $('#error').text(res.msg);
+        }
+    }
+ })
+})
+
 
 </script>
 </html>
