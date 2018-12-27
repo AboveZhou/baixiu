@@ -16,7 +16,11 @@ require_once "../common/isset_session.php";
     <link rel="stylesheet" href="../static/assets/vendors/font-awesome/css/font-awesome.css">
     <link rel="stylesheet" href="../static/assets/vendors/nprogress/nprogress.css">
     <link rel="stylesheet" href="../static/assets/css/admin.css">
+    <script src="../static/assets/vendors/jquery/jquery.js"></script>
+    <script src="../static/assets/vendors/bootstrap/js/bootstrap.js"></script>
     <script src="../static/assets/vendors/nprogress/nprogress.js"></script>
+    <script src="../static/assets/vendors/ckeditor/ckeditor.js"></script>
+
 </head>
 
 <body>
@@ -43,7 +47,7 @@ include_once "../common/admin-nav.php";
             <!-- <div class="alert alert-danger">
         <strong>错误！</strong>发生XXX错误
       </div> -->
-            <form class="row">
+            <form class="row" id="form">
                 <div class="col-md-9">
                     <div class="form-group">
                         <label for="title">标题</label>
@@ -85,7 +89,8 @@ include_once "../common/admin-nav.php";
             </select>
                     </div>
                     <div class="form-group">
-                        <button class="btn btn-primary" type="submit">保存</button>
+                        
+                        <input id="btn-save" type="button" value="保存" class="btn btn-primary" type="submit">
                     </div>
                 </div>
             </form>
@@ -132,11 +137,95 @@ include_once "../common/admin-aside.php";
         </ul>
     </div> -->
 
-    <script src="../static/assets/vendors/jquery/jquery.js"></script>
-    <script src="../static/assets/vendors/bootstrap/js/bootstrap.js"></script>
+    
     <script>
         NProgress.done()
     </script>
 </body>
+<script>
+//上传文件提交事件用change
+$('#feature').change(function(){
+    // console.dir(this);
+    var file = this.files[0];
+    var formdata = new FormData();
+    formdata.append("file",file);
+    $.ajax({
+        type: "post",
+        url: "../api/getPostAdd.php",
+        data: formdata,
+        // 告诉jQuery不要去设置Content-Type请求头
+        contentType:false,
+        // 告诉jQuery不要去处理发送的数据
+        processData:false,
+        dataType: "json",
+        success: function (res) {
+            if (res.code==1) {
+                $('.help-block').show();
+                $('.help-block').attr("src",res.src);
+            }
+        }
+    })
 
+})
+
+
+//富文本
+//1.引入ckeditor.js文件
+//2.文本域
+//3.调用方法CKEDITOR.replace('id');
+
+CKEDITOR.replace('content');
+
+//给保存按钮注册点击事件
+$('#btn-save').click(function(){
+    CKEDITOR.instances.content.updateElement();
+
+//    var data = $('#form').serialize();
+//    console.log(data);
+        var title = $('#title').val();
+        var content = $('#content').val();
+        var slug = $('#slug').val();
+        var category = $('#category').val();
+        var created = $('#created').val();
+        var status = $('#status').val();
+
+    var file = $('#feature')[0].files[0];
+    // console.log(file);
+    
+    var formdata = new FormData();
+    formdata.append("file",file);
+    formdata.append("title",title);
+    formdata.append("content",content);
+    formdata.append("slug",slug);
+    formdata.append("category",category);
+    formdata.append("created",created);
+    formdata.append("status",status);
+    // formdata.append("data",data);
+   $.ajax({
+       type: "post",
+       url: "../api/getAllPostAddData.php",
+       data: formdata,
+        // 告诉jQuery不要去设置Content-Type请求头
+        contentType:false,
+        // 告诉jQuery不要去处理发送的数据
+        processData:false,
+       dataType: "json",
+       success: function (res) {
+        //    console.log(res);
+        if (res.code==1) {
+        $('#title').val('');
+        $('#content').val('');
+         $('#slug').val('');
+        //  $('#category').val('');
+        //  $('#created').val('');
+        // $('#status').val('');
+        $('.help-block').hide();
+        }
+           
+       }
+   });
+})
+
+
+</script>
 </html>

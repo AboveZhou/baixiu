@@ -37,9 +37,9 @@ include_once "../common/admin-nav.php";
                 <h1>所有评论</h1>
             </div>
             <!-- 有错误信息时展示 -->
-            <!-- <div class="alert alert-danger">
-        <strong>错误！</strong>发生XXX错误
-      </div> -->
+            <div class="alert alert-danger" style="display:none">
+        <strong>错误！</strong> <span id="error"></span>
+      </div>
             <div class="page-action">
                 <!-- show when multiple checked -->
                 <div class="btn-batch" style="display: none">
@@ -48,11 +48,7 @@ include_once "../common/admin-nav.php";
                     <button class="btn btn-danger btn-sm">批量删除</button>
                 </div>
                 <ul class="pagination pagination-sm pull-right">
-                    <li><a href="#">上一页</a></li>
-                    <li><a href="#">1</a></li>
-                    <li><a href="#">2</a></li>
-                    <li><a href="#">3</a></li>
-                    <li><a href="#">下一页</a></li>
+                  
                 </ul>
             </div>
             <table class="table table-striped table-bordered table-hover">
@@ -68,7 +64,7 @@ include_once "../common/admin-nav.php";
                     </tr>
                 </thead>
                 <tbody>
-                    <tr class="danger">
+                    <!-- <tr class="danger">
                         <td class="text-center"><input type="checkbox"></td>
                         <td>大大</td>
                         <td>楼主好人，顶一个</td>
@@ -103,7 +99,7 @@ include_once "../common/admin-nav.php";
                             <a href="post-add.php" class="btn btn-warning btn-xs">驳回</a>
                             <a href="javascript:;" class="btn btn-danger btn-xs">删除</a>
                         </td>
-                    </tr>
+                    </tr> -->
                 </tbody>
             </table>
         </div>
@@ -151,9 +147,87 @@ include_once "../common/admin-aside.php";
 
     <script src="../static/assets/vendors/jquery/jquery.js"></script>
     <script src="../static/assets/vendors/bootstrap/js/bootstrap.js"></script>
+    <script src="../static/assets/vendors/art-template/template-web.js"></script>
+    <script src="../static/assets/vendors/twbs-pagination/jquery.twbsPagination.js"></script>
     <script>
         NProgress.done()
     </script>
 </body>
+<script type="text/template" id="dangerTpl">
+{{each data}}
+                    <tr class="danger">
+                        <td class="text-center"><input type="checkbox"></td>
+                        <td>{{$value.author}}</td>
+                        <td style="width:400px">{{$value.content}}</td>
+                        <td>{{$value.title}}</td>
+                        <td>{{$value.created}}</td>
+                        <td>
+            
+                            {{if($value.status=='held')}} 待审核
+                            {{else if ($value.status=='approved')}}  准许
+                            {{else if ($value.status=='rejected')}} 拒绝
+                            {{else if ($value.status=='trashed')}} 回收站
+                            {{/if}}
 
+                        </td>
+                        <td class="text-center">
+                            <a href="post-add.php" class="btn btn-info btn-xs">批准</a>
+                            <a href="javascript:;" class="btn btn-danger btn-xs">删除</a>
+                        </td>
+                    </tr>
+{{/each}}
+</script>
+<script>
+    var currentPage = 1;
+    var pageSize = 20;
+    var maxPage;
+    //调用函数
+    getPageData(currentPage,pageSize);
+    //将ajax封装函数
+    function getPageData(currentPage,pageSize) {
+        $.ajax({
+            type: "post",
+            url: "../api/getCommData.php",
+            data:{
+                "currentPage":currentPage,
+                "pageSize":pageSize
+            },
+            dataType: "json",
+            success: function (res) {
+                // console.log(res.data);
+                if(res.code==1) {
+                    var html = template("dangerTpl",res);
+                    $('tbody').html(html);
+                    maxPage = Math.ceil(res.count/pageSize);
+                    // 因为ajax请求是异步操作  所以此时数据还没有返回来  需要将此操作放入到ajax请求成功后的操作中
+                    //分页插件
+                    // 1.插入插件js
+                    // 2.准备一个ul  将其放入其中
+                    // 3.调用方法渲染在页面上
+                    $('.pagination').twbsPagination({
+                    totalPages: maxPage,
+                    visiblePages: 5,
+                    first:"首页",
+                    prev:"上一页",
+                    next:"下一页",
+                    last:"尾页",
+                    onPageClick: function (event, page) {
+                        //修改当前页面
+                        currentPage = page;
+                        getPageData(currentPage,pageSize);
+                    }
+                    });
+                } else {
+                    $('.alert').show();
+                    $('#error').text(res.msg)
+                }
+            }
+        })
+    }
+
+ 
+
+
+
+</script>
 </html>

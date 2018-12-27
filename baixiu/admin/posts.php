@@ -47,16 +47,16 @@ include_once "../common/admin-nav.php";
                 <!-- show when multiple checked -->
                 <a class="btn btn-danger btn-sm" href="javascript:;" style="display: none">批量删除</a>
                 <form class="form-inline">
-                    <select name="" class="form-control input-sm">
-            <option value="">所有分类</option>
-            <option value="">未分类</option>
+                    <select id="category" class="form-control input-sm">
+            <option value="all">所有分类</option>
+            
           </select>
-                    <select name="" class="form-control input-sm">
-            <option value="">所有状态</option>
-            <option value="">草稿</option>
-            <option value="">已发布</option>
+                    <select id="status" class="form-control input-sm">
+            <option value="all">所有状态</option>
+            <option value="drafted">草稿</option>
+            <option value="published">已发布</option>
           </select>
-                    <button class="btn btn-default btn-sm">筛选</button>
+                    <input type="button" id="filter" value="筛选" class="btn btn-default btn-sm">
                 </form>
                 <ul class="pagination pagination-sm pull-right">
                   
@@ -208,14 +208,26 @@ include_once "../common/admin-aside.php";
 
 
 <script>
+//定义当前页
 var currentPage = 1;
+//定义每页文章的篇数
 var pageSize = 20;
+//定义一个最大的分页页数
 var maxPage = 0;
-function getData(currentPage,pageSize) {
+//定义所有分类的值
+var category = "all";
+//定义所有状态的值
+var status = "all";
+function getData(currentPage,pageSize,category,status) {
     $.ajax({
     type: "post",
     url: "../api/getPostData.php",
-    data: {"currentPage":currentPage,"pageSize":pageSize},
+    data: {
+        "currentPage":currentPage,
+        "pageSize":pageSize,
+        "category":category,
+        " status": status
+        },
     dataType: "json",
     success: function (res) {
         // console.log(res);
@@ -230,7 +242,7 @@ function getData(currentPage,pageSize) {
 })
 }
 
-getData(currentPage,pageSize) ;
+getData(currentPage,pageSize,category,status) ;
 //给分页上的分页按钮注册点击事件
 
 $('.pagination').on("click","li",function(){
@@ -238,7 +250,38 @@ $('.pagination').on("click","li",function(){
 //获取当前点击的自定义属性id  这个id与将要显示的页数相等
    currentPage = parseInt($(this).attr('pageId'));
 //   alert(currentPage);
-getData(currentPage,pageSize) ;
+getData(currentPage,pageSize,category,status) ;
+})
+
+
+
+//所有文章分类动态生成
+$.ajax({
+    type: "post",
+    url: "../api/getCategory.php",
+    dataType: "json",
+    success: function (res) {
+        if(res.code==1) {
+            var html = '';
+            res.data.forEach(function(value,index){
+                html +=     '<option value="'+value.id+'">'+value.name+'</option>';
+            })
+                $('#category').append(html);
+        }
+    }
+})
+
+
+//给筛选按钮注册点击事件
+$('#filter').click(function(){
+    //获取所有分类的值
+     category = $('#category').val();
+   // 获取所有状态的值
+     status = $('#status').val();
+   //再次调用函数  因为ajax请求一致
+   getData(currentPage,pageSize,category,status) ;
+
+    
 })
 
 </script>
